@@ -1,0 +1,4 @@
+board = {
+    'vendor': 'compulab',
+    'soc': 'tegra20',
+}

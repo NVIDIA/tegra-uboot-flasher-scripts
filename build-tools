@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2013, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+import multiprocessing
+import os
+import shutil
+import sys
+
+scripts_dir = os.path.dirname(os.path.abspath(__file__))
+scripts_parent_dir = os.path.dirname(scripts_dir)
+
+out_tools_dir = os.path.join(scripts_parent_dir, '_out_tools')
+cbootimage_dir = os.path.join(scripts_parent_dir, 'cbootimage')
+dtc_dir = os.path.join(scripts_parent_dir, 'dtc')
+tegrarcm_dir = os.path.join(scripts_parent_dir, 'tegrarcm')
+
+makejobs = '-j' + str(multiprocessing.cpu_count() + 1)
+
+def mkdir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+def cp(src, dst):
+    print '+ cp', src, dst
+    shutil.copy(src, dst)
+
+def cps(srcdir, dstdir, *files):
+    for f in files:
+        src = os.path.join(srcdir, f)
+        dst = os.path.join(dstdir, f)
+        cp(src, dst)
+
+def rmtree(path):
+    if os.path.exists(path):
+            shutil.rmtree(path)
+
+def run(dir, cmd):
+    oldcwd = os.getcwd()
+    print '+ cd', dir
+    os.chdir(dir)
+    print '+', cmd
+    ret = os.system(cmd)
+    if ret:
+        raise Exception('Command failed: %d' % ret)
+    os.chdir(oldcwd)
+
+def cmd_build_tegrarcm():
+    run(tegrarcm_dir, './autogen.sh')
+    run(tegrarcm_dir, 'make -s ' + makejobs)
+
+    mkdir(out_tools_dir)
+    cps(os.path.join(tegrarcm_dir, 'src'), out_tools_dir, 'tegrarcm')
+
+def cmd_build_cbootimage():
+    run(cbootimage_dir, './autogen.sh')
+    run(cbootimage_dir, 'make -s ' + makejobs)
+
+    mkdir(out_tools_dir)
+    cps(os.path.join(cbootimage_dir, 'src'), out_tools_dir, 'cbootimage')
+
+def cmd_build_dtc():
+    run(dtc_dir, 'make -s ' + makejobs)
+
+    mkdir(out_tools_dir)
+    cps(dtc_dir, out_tools_dir, 'dtc', 'fdtput')
+
+def cmd_build():
+    cmd_build_tegrarcm()
+    cmd_build_cbootimage()
+    cmd_build_dtc()
+
+def cmd_help():
+    print 'usage: build-tools <command>'
+    for cmd in sorted(cmdmap.keys()):
+        print ' ', cmd
+
+def cmd_help_error_exit():
+    print 'ERROR:',
+    cmd_help()
+    sys.exit(1)
+
+cmdmap = {
+    '-h':               cmd_help,
+    '--help':           cmd_help,
+    'help':             cmd_help,
+    'help-error-exit':  cmd_help_error_exit,
+    'build-tegrarcm':   cmd_build_tegrarcm,
+    'build-cbootimage': cmd_build_cbootimage,
+    'build-dtc':        cmd_build_dtc,
+    'build':            cmd_build,
+}
+
+if __name__ == '__main__':
+    app = sys.argv.pop(0)
+    if len(sys.argv) == 0:
+        cmdname = 'build'
+    elif len(sys.argv) == 1:
+        cmdname = sys.argv.pop(0)
+    else:
+        cmdname = 'help-error-exit'
+    if not cmdmap.has_key(cmdname):
+        cmdname = 'help-error-exit'
+    cmd = cmdmap[cmdname]
+    cmd()

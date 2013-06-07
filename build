@@ -1,0 +1,203 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2013, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+import multiprocessing
+import os
+import shutil
+import sys
+from tegraboardconfigs import *
+
+scripts_dir = os.path.dirname(os.path.abspath(__file__))
+scripts_parent_dir = os.path.dirname(scripts_dir)
+
+out_tools_dir = os.path.abspath(os.path.join(scripts_parent_dir, '_out_tools'))
+if os.path.exists(out_tools_dir):
+    os.environ['PATH'] = out_tools_dir + ':' + os.environ['PATH']
+
+if not os.environ.has_key('CROSS_COMPILE'):
+    os.environ['CROSS_COMPILE'] = 'arm-linux-gnueabi-'
+
+cbootimage_configs_dir = os.path.join(scripts_parent_dir, 'cbootimage-configs')
+uboot_dir = os.path.join(scripts_parent_dir, 'u-boot')
+
+def gen_cbimage_dir(boardname):
+    return os.path.join(cbootimage_configs_dir, boards[boardname]['soc'], boards[boardname]['vendor'], boardname)
+
+out_dir = os.path.join(scripts_parent_dir, '_out')
+def gen_out_board_dir(boardname):
+    return os.path.join(out_dir, boardname)
+
+build_dir = os.path.join(scripts_parent_dir, '_build')
+def gen_build_board_dir(boardname):
+    return os.path.join(build_dir, boardname)
+def gen_build_uboot_dir(build_board_dir):
+    return os.path.join(build_board_dir, 'u-boot')
+
+makejobs = '-j' + str(multiprocessing.cpu_count() + 1)
+
+def mkdir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+def cp(src, dst):
+    print '+ cp', src, dst
+    shutil.copy(src, dst)
+
+def rm(fn):
+    if (os.path.exists(fn)):
+        os.unlink(fn)
+
+def rmtree(path):
+    if os.path.exists(path):
+            shutil.rmtree(path)
+
+def run(dir, cmd):
+    oldcwd = os.getcwd()
+    print '+ cd', dir
+    os.chdir(dir)
+    print '+', cmd
+    ret = os.system(cmd)
+    if ret:
+        raise Exception('Command failed: %d' % ret)
+    os.chdir(oldcwd)
+
+def all_enabled_confignames():
+    for configname in configs.keys():
+        if configs[configname].has_key('disabled'):
+            continue
+        yield configname
+
+def all_enabled_confignames_for_boardname(boardname):
+    for configname in all_enabled_confignames():
+        if configs[configname]['board'] != boardname:
+            continue
+        yield configname
+
+def all_enabled_boardnames():
+    seen = {}
+    for configname in all_enabled_confignames():
+        boardname = configs[configname]['board']
+        if seen.has_key(boardname):
+            continue
+        seen[boardname] = True
+        yield boardname
+
+def dtb_filename(config):
+    extra = configs[config]['dtbfn-extra']
+    boardname = configs[config]['board']
+    return boards[boardname]['soc'] + '-' + boardname + extra + '.dtb'
+
+def build_uboot_one_board(boardname):
+    build_board_dir = gen_build_board_dir(boardname)
+    build_uboot_dir = gen_build_uboot_dir(build_board_dir)
+    mkdir(build_uboot_dir)
+
+    out_board_dir = gen_out_board_dir(boardname)
+    mkdir(out_board_dir)
+
+    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' ' + boardname + '_config')
+    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' -s ' + makejobs)
+
+    src = os.path.join(build_uboot_dir, 'u-boot-nodtb-tegra.bin')
+    dst = os.path.join(out_board_dir, 'u-boot-nodtb-tegra.bin')
+    cp(src, dst)
+
+    src = os.path.join(build_uboot_dir, 'u-boot.dtb')
+    dst = os.path.join(out_board_dir, 'u-boot.dtb')
+    cp(src, dst)
+
+    src = os.path.join(build_uboot_dir, 'u-boot-dtb-tegra.bin')
+    dst = os.path.join(out_board_dir, 'u-boot-dtb-tegra.bin')
+    cp(src, dst)
+
+def cmd_build_uboots():
+    for boardname in all_enabled_boardnames():
+        build_uboot_one_board(boardname)
+
+def build_bct_img_one_board(boardname):
+    cbimage_dir = gen_cbimage_dir(boardname)
+
+    out_board_dir = gen_out_board_dir(boardname)
+    mkdir(out_board_dir)
+
+    src = os.path.join(out_board_dir, 'u-boot-dtb-tegra.bin')
+    dst = os.path.join(cbimage_dir, 'u-boot.bin')
+    cp(src, dst)
+    run(cbimage_dir, './build.sh')
+
+    for configname in all_enabled_confignames_for_boardname(boardname):
+        bct_fn = configs[configname]['bct']
+        src = os.path.join(cbimage_dir, bct_fn)
+        dst = os.path.join(out_board_dir, bct_fn)
+        cp(src, dst)
+
+        img_fn = configs[configname]['flash-image']
+        src = os.path.join(cbimage_dir, img_fn)
+        dst = os.path.join(out_board_dir, img_fn)
+        cp(src, dst)
+
+def cmd_build_bcts_imgs():
+    for boardname in all_enabled_boardnames():
+        build_bct_img_one_board(boardname)
+
+def cmd_build_configs():
+    run(scripts_dir, 'cp -rp configs ' + out_dir)
+
+def cmd_build():
+    cmd_build_uboots()
+    cmd_build_bcts_imgs()
+    cmd_build_configs()
+
+def cmd_help():
+    print 'usage: build <command>'
+    for cmd in sorted(cmdmap.keys()):
+        print ' ', cmd
+
+def cmd_help_error_exit():
+    print 'ERROR:',
+    cmd_help()
+    sys.exit(1)
+
+cmdmap = {
+    '-h':              cmd_help,
+    '--help':          cmd_help,
+    'help':            cmd_help,
+    'help-error-exit': cmd_help_error_exit,
+    'build-uboots':    cmd_build_uboots,
+    'build-bcts-imgs': cmd_build_bcts_imgs,
+    'build-configs':   cmd_build_configs,
+    'build':           cmd_build,
+}
+
+if __name__ == '__main__':
+    app = sys.argv.pop(0)
+    if len(sys.argv) == 0:
+        cmdname = 'build'
+    elif len(sys.argv) == 1:
+        cmdname = sys.argv.pop(0)
+    else:
+        cmdname = 'help-error-exit'
+    if not cmdmap.has_key(cmdname):
+        cmdname = 'help-error-exit'
+    load_configs('configs')
+    cmd = cmdmap[cmdname]
+    cmd()
