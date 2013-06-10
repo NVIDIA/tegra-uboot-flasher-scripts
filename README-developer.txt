@@ -46,7 +46,7 @@ To obtain the source of the tegra-uboot-flasher project, do:
 
 mkdir tegra-uboot-flasher
 cd tegra-uboot-flasher
-repo init -u git://github.com/nvidia/tegra-uboot-flasher-manifests.git \
+repo init -u git://github.com/NVIDIA/tegra-uboot-flasher-manifests.git \
         -m MANIFEST # see explanation below
 repo sync
 
