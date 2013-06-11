@@ -51,15 +51,15 @@ repo init -u git://github.com/NVIDIA/tegra-uboot-flasher-manifests.git \
 repo sync
 
 There are two separate repo manifests for this project. Use repo's -m option
-to specify which you want. Valid values are default (all required
-dependencies) and default-notools (excludes the source to potentially distro-
-packaged utilities cbootimage, tegrarcm, dtc).
+to specify which you want. Valid values are default.xml (all required
+dependencies) and default-notools.xml (excludes the source to potentially
+distro-packaged utilities cbootimage, tegrarcm, dtc).
 
 Compiling Potentially Packaged Utilities
 ========================================
 
 If you have installed distro packages for the utilities mentioned above,
-and/or sync'd the default-notools manifest, skip this step.
+and/or sync'd the default-notools.xml manifest, skip this step.
 
 cd to the scripts sub-directory (i.e. the directory containing this README),
 and execute:
