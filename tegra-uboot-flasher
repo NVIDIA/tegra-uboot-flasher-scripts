@@ -86,6 +86,10 @@ def find_config_dir():
     socname = boards[boardname]['soc']
     out_board_dir = os.path.join(args.data_dir, boardname)
 
+def func_list_configs():
+    for configname in sorted(configs.keys()):
+        print configname
+
 parser = argparse.ArgumentParser(description='Write an image to a Tegra board\'s flash')
 parser.add_argument('--debug', action='store_true',
                    help='Turn on debugging prints')
@@ -129,8 +133,7 @@ if not args.data_dir:
 load_configs(os.path.join(args.data_dir, 'configs'))
 
 if args.list_confignames:
-    for configname in sorted(configs.keys()):
-        print configname
+    func_list_configs()
     sys.exit(0)
 
 find_config_dir()
