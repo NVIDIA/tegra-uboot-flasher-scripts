@@ -72,6 +72,15 @@ Creating Flash Images
 This step creates the target binaries and supporting data files necessary to
 run the tegra-uboot-flasher script. You will always need to perform this step.
 
+You will need an ARM cross-compiler in order to compile U-Boot. This may be
+obtained from a distribution package, or be a custom-built toolchain. The
+environment variable CROSS_COMPILE should be set to select the compiler to
+use. CROSS_COMPILE should contain the common prefix of all the binaries in
+the cross-compiler, for example if gcc is arm-linux-gnueabi-gcc, then
+CROSS_COMPILE should be set to arm-linux-gnueabi-, or
+/path/to/arm-linux-gnueabi-. If this variable is not set, then the build
+script assumes a value of arm-linux-gnueabi-.
+
 cd to the scripts sub-directory (i.e. the directory containing this README),
 and execute:
 
