@@ -51,19 +51,19 @@ def run(dir, cmd):
         raise Exception('Command failed: %d' % ret)
     os.chdir(oldcwd)
 
-def gen_flashcmd_mmc():
+def gen_flashcmd_mmc(flash_image_addr, flash_img_size):
     flash_id = configs[args.configname]['flash-id-uboot']
     flash_img_size_sectors = flash_img_size / 512
     flashcmd = 'mmc dev %d 1 ; ' % flash_id
     flashcmd += 'mmc write 0x%08x 0 0x%x ; ' % (flash_image_addr, flash_img_size_sectors)
     return flashcmd
 
-def gen_flashcmd_nand():
+def gen_flashcmd_nand(flash_image_addr, flash_img_size):
     flashcmd = 'nand erase.chip ; '
     flashcmd += 'nand write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
     return flashcmd
 
-def gen_flashcmd_spi():
+def gen_flashcmd_spi(flash_image_addr, flash_img_size):
     flashcmd = 'sf probe 0 ; '
     flashcmd += 'sf erase 0 0x%08x ; ' % configs[args.configname]['flash-erase-size']
     flashcmd += 'sf write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
@@ -200,7 +200,7 @@ try:
     bootcmd = ''
     if args.debug:
         bootcmd = 'crc32 0x%08x 0x%08x ; ' % (flash_image_addr, flash_img_size)
-    bootcmd += gen_flashcmd()
+    bootcmd += gen_flashcmd(flash_image_addr, flash_img_size)
     bootcmd += 'env default -f -a ; '
     # Perhaps U-Boot should set $boardname based on the ID EEPROM; then we wouldn't need this
     if configs[args.configname]['dtbfn-extra'] != '':
