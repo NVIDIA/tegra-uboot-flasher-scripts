@@ -18,7 +18,7 @@ harmony, cardhu-a02-1gb.config, cardhu-a04-1gb.config.
 
 You may find a list of valid values for configname by executing:
 
-tegra-uboot-flasher --list-confignames
+tegra-uboot-flasher list-configs
 
 Simple Usage
 ============
@@ -27,7 +27,7 @@ To flash a board, connect a USB cable from your host PC to the Tegra device,
 place that board into USB recovery mode, and execute the following as root
 on the host machine:
 
-tegra-uboot-flasher configname
+tegra-uboot-flasher flash CONFIG
 
 This will download code and data to the Tegra device and execute a flashing
 routine. Once this is complete, the system will reboot into the freshly

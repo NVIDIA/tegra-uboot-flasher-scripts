@@ -204,26 +204,37 @@ def func_flash():
         else:
             rmtree(workdir)
 
-parser = argparse.ArgumentParser(description='Write an image to a Tegra board\'s flash')
+parser = argparse.ArgumentParser(description='Execute a bootloader on a ' +
+    'Tegra board, possibly modifying it prior to download so as to execute ' +
+    'commands, such as writing an image to flash.')
+
 parser.add_argument('--debug', action='store_true',
-                   help='Turn on debugging prints')
+    help='Turn on debugging prints')
 parser.add_argument('--data-dir', type=str,
-                   help='The directory containing board data')
-parser.add_argument('--work-dir', type=str,
-                   help='The temporary directory used during operation')
-parser.add_argument('--save-work-dir', action='store_true',
-                   help='Don\'t delete the work-dir after execution')
-parser.add_argument('--flash-image', type=str,
-                   help='The flash image to write, instead of U-Boot itself')
-parser.add_argument('--gen-only', action='store_true',
-                   help='Just create the work-dir; don\'t actually flash the image')
+    help='The directory containing board data')
 parser.add_argument('--force-no-out-dir', action='store_true',
-                   help='Don\'t check for ../_out* directories used in source tree')
-group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument('--list-confignames', action='store_true',
-                   help='List known configuration names, and exit')
-group.add_argument('configname', type=str, nargs='?',
-                   help='The configuration name of the board')
+    help='Don\'t check for ../_out* directories used in source tree')
+
+subparsers = parser.add_subparsers()
+
+parser_list_configs = subparsers.add_parser('list-configs',
+    help='List known board configurations')
+parser_list_configs.set_defaults(func = func_list_configs)
+
+parser_flash = subparsers.add_parser('flash',
+    help='Write an image, usually U-Boot itself, to flash on the device')
+parser_flash.set_defaults(func = func_flash)
+parser_flash.add_argument('--work-dir', type=str,
+    help='The temporary directory used during operation')
+parser_flash.add_argument('--save-work-dir', action='store_true',
+    help='Don\'t delete the work-dir after execution')
+parser_flash.add_argument('--flash-image', type=str,
+    help='The flash image to write, instead of U-Boot itself')
+parser_flash.add_argument('--gen-only', action='store_true',
+    help='Just create the work-dir; don\'t actually flash the image')
+parser_flash.add_argument('configname', metavar='CONFIG', type=str,
+    help='The configuration name of the board')
+
 args = parser.parse_args()
 if args.debug: print args
 
@@ -246,7 +257,4 @@ if not args.data_dir:
 
 load_configs(os.path.join(args.data_dir, 'configs'))
 
-if args.list_confignames:
-    func_list_configs()
-else:
-    func_flash()
+args.func()
