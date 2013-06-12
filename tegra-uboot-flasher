@@ -75,6 +75,17 @@ gen_flashcmds = {
     'spi': gen_flashcmd_spi,
 }
 
+def find_config_dir():
+    if not configs.has_key(args.configname):
+        print 'Unknown config "%s"' % args.configname
+        sys.exit(1)
+
+    global boardname, socname, out_board_dir
+
+    boardname = configs[args.configname]['board']
+    socname = boards[boardname]['soc']
+    out_board_dir = os.path.join(args.data_dir, boardname)
+
 parser = argparse.ArgumentParser(description='Write an image to a Tegra board\'s flash')
 parser.add_argument('--debug', action='store_true',
                    help='Turn on debugging prints')
@@ -122,14 +133,7 @@ if args.list_confignames:
         print configname
     sys.exit(0)
 
-if not configs.has_key(args.configname):
-    print 'Unknown config "%s"' % args.configname
-    sys.exit(1)
-
-boardname = configs[args.configname]['board']
-socname = boards[boardname]['soc']
-
-out_board_dir = os.path.join(args.data_dir, boardname)
+find_config_dir()
 
 u_boot_no_dtb = os.path.join(out_board_dir, 'u-boot-nodtb-tegra.bin')
 u_boot_no_dtb_size = os.path.getsize(u_boot_no_dtb)
