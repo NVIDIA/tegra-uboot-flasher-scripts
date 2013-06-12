@@ -29,6 +29,52 @@ import sys
 import tempfile
 from tegraboardconfigs import *
 
+def mkdir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+def cp(src, dst):
+    print '+ cp', src, dst
+    shutil.copy(src, dst)
+
+def rmtree(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
+def run(dir, cmd):
+    oldcwd = os.getcwd()
+    print '+ cd', dir
+    os.chdir(dir)
+    print '+', cmd
+    ret = os.system(cmd)
+    if ret:
+        raise Exception('Command failed: %d' % ret)
+    os.chdir(oldcwd)
+
+def gen_flashcmd_mmc():
+    flash_id = configs[args.configname]['flash-id-uboot']
+    flash_img_size_sectors = flash_img_size / 512
+    flashcmd = 'mmc dev %d 1 ; ' % flash_id
+    flashcmd += 'mmc write 0x%08x 0 0x%x ; ' % (flash_image_addr, flash_img_size_sectors)
+    return flashcmd
+
+def gen_flashcmd_nand():
+    flashcmd = 'nand erase.chip ; '
+    flashcmd += 'nand write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
+    return flashcmd
+
+def gen_flashcmd_spi():
+    flashcmd = 'sf probe 0 ; '
+    flashcmd += 'sf erase 0 0x%08x ; ' % configs[args.configname]['flash-erase-size']
+    flashcmd += 'sf write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
+    return flashcmd
+
+gen_flashcmds = {
+    'emmc': gen_flashcmd_mmc,
+    'nand': gen_flashcmd_nand,
+    'spi': gen_flashcmd_spi,
+}
+
 parser = argparse.ArgumentParser(description='Write an image to a Tegra board\'s flash')
 parser.add_argument('--debug', action='store_true',
                    help='Turn on debugging prints')
@@ -124,52 +170,6 @@ loadaddr = socs[socname]['ram-base'] + 0x00108000
 flash_image_addr = loadaddr + padded_size
 if args.debug:
     print 'flash_image_addr %d 0x%x' % (flash_image_addr, flash_image_addr)
-
-def mkdir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-def cp(src, dst):
-    print '+ cp', src, dst
-    shutil.copy(src, dst)
-
-def rmtree(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-
-def run(dir, cmd):
-    oldcwd = os.getcwd()
-    print '+ cd', dir
-    os.chdir(dir)
-    print '+', cmd
-    ret = os.system(cmd)
-    if ret:
-        raise Exception('Command failed: %d' % ret)
-    os.chdir(oldcwd)
-
-def gen_flashcmd_mmc():
-    flash_id = configs[args.configname]['flash-id-uboot']
-    flash_img_size_sectors = flash_img_size / 512
-    flashcmd = 'mmc dev %d 1 ; ' % flash_id
-    flashcmd += 'mmc write 0x%08x 0 0x%x ; ' % (flash_image_addr, flash_img_size_sectors)
-    return flashcmd
-
-def gen_flashcmd_nand():
-    flashcmd = 'nand erase.chip ; '
-    flashcmd += 'nand write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
-    return flashcmd
-
-def gen_flashcmd_spi():
-    flashcmd = 'sf probe 0 ; '
-    flashcmd += 'sf erase 0 0x%08x ; ' % configs[args.configname]['flash-erase-size']
-    flashcmd += 'sf write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
-    return flashcmd
-
-gen_flashcmds = {
-    'emmc': gen_flashcmd_mmc,
-    'nand': gen_flashcmd_nand,
-    'spi': gen_flashcmd_spi,
-}
 
 flash_type = configs[args.configname]['flash-type']
 if not gen_flashcmds.has_key(flash_type):
