@@ -75,6 +75,15 @@ gen_flashcmds = {
     'spi': gen_flashcmd_spi,
 }
 
+def get_loadaddr():
+    # 0x00108000 is CONFIG_SYS_TEXT_BASE in U-Boot, minus RAM base
+    return soc['ram-base'] + 0x00108000
+
+def gen_tegrarcm_cmd(bootloader, loadaddr):
+    if type(loadaddr) != str:
+        loadaddr = "0x%08x" % loadaddr
+    return 'tegrarcm --bct=' + bct + ' --bootloader=' + bootloader + ' --loadaddr=' + loadaddr
+
 def find_config_dir():
     if not configs.has_key(args.configname):
         print 'Unknown config "%s"' % args.configname
@@ -130,7 +139,7 @@ def func_flash():
         print 'pad_size %d 0x%x' % (pad_size, pad_size)
 
     # 0x00108000 is CONFIG_SYS_TEXT_BASE in U-Boot, minus RAM base
-    loadaddr = soc['ram-base'] + 0x00108000
+    loadaddr = get_loadaddr()
     flash_image_addr = loadaddr + padded_size
     if args.debug:
         print 'flash_image_addr %d 0x%x' % (flash_image_addr, flash_image_addr)
@@ -185,7 +194,7 @@ def func_flash():
         shutil.copyfileobj(open(flash_img, 'rb'), f)
         f.close()
 
-        cmd = 'tegrarcm --bct=' + bct + ' --bootloader=' + uboot_flasher + ' --loadaddr=0x%08x' % loadaddr
+        cmd = gen_tegrarcm_cmd(uboot_flasher, loadaddr)
 
         flasher_sh = os.path.join(workdir, 'flasher.sh')
         f = open(flasher_sh, 'wt')
@@ -205,6 +214,22 @@ def func_flash():
             print 'Not removing work directory:', workdir
         else:
             rmtree(workdir)
+
+def func_exec():
+    find_config_dir()
+
+    if args.bootloader:
+        bootloader = args.bootloader
+    else:
+        bootloader = os.path.join(out_board_dir, 'u-boot-dtb-tegra.bin')
+
+    if args.loadaddr:
+        loadaddr = args.loadaddr
+    else:
+        loadaddr = get_loadaddr()
+
+    cmd = gen_tegrarcm_cmd(bootloader, loadaddr)
+    run(scripts_dir, cmd)
 
 parser = argparse.ArgumentParser(description='Execute a bootloader on a ' +
     'Tegra board, possibly modifying it prior to download so as to execute ' +
@@ -234,8 +259,22 @@ parser_flash.add_argument('--flash-image', type=str,
     help='The flash image to write, instead of U-Boot itself')
 parser_flash.add_argument('--gen-only', action='store_true',
     help='Just create the work-dir; don\'t actually flash the image')
-parser_flash.add_argument('configname', metavar='CONFIG', type=str,
-    help='The configuration name of the board')
+
+parser_exec = subparsers.add_parser('exec',
+    help='Download and execute an unmodified bootloader binary, named ' +
+        'u-boot-dtb-tegra.bin by default. This can be useful to simply test ' +
+        'a U-Boot build without flashing it, or to download something other ' +
+        'than U-Boot')
+parser_exec.set_defaults(func = func_exec)
+parser_exec.add_argument('--bootloader', type=str,
+    help='The bootloader to download. Defaults to u-boot-dtb-tegra.bin in ' +
+        'the data directory')
+parser_exec.add_argument('--loadaddr', type=str,
+    help='Load address for the bootloader binary')
+
+for p in (parser_flash, parser_exec):
+    p.add_argument('configname', metavar='CONFIG', type=str,
+        help='The configuration name of the board')
 
 args = parser.parse_args()
 if args.debug: print args

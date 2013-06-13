@@ -20,8 +20,8 @@ You may find a list of valid values for configname by executing:
 
 tegra-uboot-flasher list-configs
 
-Simple Usage
-============
+Simple Usage - Flashing
+=======================
 
 To flash a board, connect a USB cable from your host PC to the Tegra device,
 place that board into USB recovery mode, and execute the following as root
@@ -34,6 +34,19 @@ routine. Once this is complete, the system will reboot into the freshly
 flashed boot image, and the system will proceed to boot normally. Depending
 on the board and U-Boot support, the flashing process may be observed via the
 debug serial port, or on a built-in LCD panel.
+
+Simple Usage - Testing U-Boot
+=============================
+
+If you simply want to download an unmodified U-Boot to the Tegra device and
+execute it, execute the following as root on the host machine:
+
+tegra-uboot-flasher exec CONFIG
+
+This can be useful for quickly testing changes to U-Boot without writing it
+to flash every time. This mode of operation is a very simple wrapper around
+tegrarcm, which eliminates the need to remember which BCT to use for each
+board configuration.
 
 Advanced Options
 ================
