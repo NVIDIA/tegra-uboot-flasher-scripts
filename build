@@ -183,7 +183,26 @@ def cmd_build_bcts_imgs():
         build_bct_img_one_board(boardname)
 
 def cmd_build_configs():
-    run(scripts_dir, 'cp -rp configs ' + out_dir)
+    mkdir(os.path.join(out_dir, 'configs'))
+    boardnames = {}
+    for configname in all_enabled_confignames():
+        fn = configname + '.config'
+        src = os.path.join(scripts_dir, 'configs', fn)
+        dst = os.path.join(out_dir, 'configs', fn)
+        cp(src, dst)
+        boardnames[configs[configname]['board']] = True
+    socnames = {}
+    for boardname in boardnames:
+        fn = boardname + '.board'
+        src = os.path.join(scripts_dir, 'configs', fn)
+        dst = os.path.join(out_dir, 'configs', fn)
+        cp(src, dst)
+        socnames[boards[boardname]['soc']] = True
+    for socname in socnames:
+        fn = socname + '.soc'
+        src = os.path.join(scripts_dir, 'configs', fn)
+        dst = os.path.join(out_dir, 'configs', fn)
+        cp(src, dst)
 
 def cmd_build():
     cmd_build_uboots()
