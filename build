@@ -102,6 +102,28 @@ def all_enabled_boardnames():
         seen[boardname] = True
         yield boardname
 
+def user_restrict_socs(enabled_socs):
+    enabled_socs = enabled_socs.split(',')
+    for socname in socs.keys():
+        if not socname in enabled_socs:
+            socs[socname]['disabled'] = True
+
+def user_restrict_boards(enabled_boards):
+    enabled_boards = enabled_boards.split(',')
+    for boardname in boards.keys():
+        if not boardname in enabled_boards:
+            boards[boardname]['disabled'] = True
+
+def restrict_boards():
+    for board in boards.values():
+        if socs[board['soc']].has_key('disabled'):
+            board['disabled'] = True
+
+def restrict_configs():
+    for config in configs.values():
+        if boards[config['board']].has_key('disabled'):
+            config['disabled'] = True
+
 def dtb_filename(config):
     extra = configs[config]['dtbfn-extra']
     boardname = configs[config]['board']
@@ -176,6 +198,11 @@ def cmd_help():
 parser = argparse.ArgumentParser(description='Build U-Boot, BCT, and flash ' +
     'images for Tegra boards.')
 
+parser.add_argument('--socs', type=str,
+    help='Restrict the build to a (comma-separated) list of SoCs.')
+parser.add_argument('--boards', type=str,
+    help='Restrict the build to a (comma-separated) list of boards.')
+
 subparsers = parser.add_subparsers()
 
 parser_list_configs = subparsers.add_parser('build-uboots',
@@ -197,4 +224,10 @@ parser_list_configs.set_defaults(func = cmd_build)
 if __name__ == '__main__':
     args = parser.parse_args()
     load_configs(os.path.join(scripts_dir, 'configs'))
+    if args.socs:
+        user_restrict_socs(args.socs)
+    if args.boards:
+        user_restrict_boards(args.boards)
+    restrict_boards()
+    restrict_configs()
     args.func()
