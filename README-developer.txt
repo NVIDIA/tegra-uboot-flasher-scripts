@@ -84,7 +84,7 @@ script assumes a value of arm-linux-gnueabi-.
 cd to the scripts sub-directory (i.e. the directory containing this README),
 and execute:
 
-./build
+./build build
 
 Flashing Devices
 ================

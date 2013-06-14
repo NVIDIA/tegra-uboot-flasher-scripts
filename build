@@ -20,6 +20,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import argparse
 import multiprocessing
 import os
 import shutil
@@ -172,32 +173,28 @@ def cmd_help():
     for cmd in sorted(cmdmap.keys()):
         print ' ', cmd
 
-def cmd_help_error_exit():
-    print 'ERROR:',
-    cmd_help()
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='Build U-Boot, BCT, and flash ' +
+    'images for Tegra boards.')
 
-cmdmap = {
-    '-h':              cmd_help,
-    '--help':          cmd_help,
-    'help':            cmd_help,
-    'help-error-exit': cmd_help_error_exit,
-    'build-uboots':    cmd_build_uboots,
-    'build-bcts-imgs': cmd_build_bcts_imgs,
-    'build-configs':   cmd_build_configs,
-    'build':           cmd_build,
-}
+subparsers = parser.add_subparsers()
+
+parser_list_configs = subparsers.add_parser('build-uboots',
+    help='Build U-Boot binaries')
+parser_list_configs.set_defaults(func = cmd_build_uboots)
+
+parser_list_configs = subparsers.add_parser('build-bcts-imgs',
+    help='Build BCT and flash images')
+parser_list_configs.set_defaults(func = cmd_build_bcts_imgs)
+
+parser_list_configs = subparsers.add_parser('build-configs',
+    help='Build config files')
+parser_list_configs.set_defaults(func = cmd_build_configs)
+
+parser_list_configs = subparsers.add_parser('build',
+    help='Build everything')
+parser_list_configs.set_defaults(func = cmd_build)
 
 if __name__ == '__main__':
-    app = sys.argv.pop(0)
-    if len(sys.argv) == 0:
-        cmdname = 'build'
-    elif len(sys.argv) == 1:
-        cmdname = sys.argv.pop(0)
-    else:
-        cmdname = 'help-error-exit'
-    if not cmdmap.has_key(cmdname):
-        cmdname = 'help-error-exit'
-    load_configs('configs')
-    cmd = cmdmap[cmdname]
-    cmd()
+    args = parser.parse_args()
+    load_configs(os.path.join(scripts_dir, 'configs'))
+    args.func()
