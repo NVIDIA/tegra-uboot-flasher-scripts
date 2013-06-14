@@ -294,7 +294,7 @@ if not args.data_dir and not args.force_no_out_dir:
         if args.debug: print 'Detected build tree; using ' + out_data_dir + ' as data dir'
         args.data_dir = out_data_dir
 if not args.data_dir:
-    data_dir = '/usr/share/tegra_uboot_flasher'
+    args.data_dir = '/usr/share/tegra_uboot_flasher'
 
 load_configs(os.path.join(args.data_dir, 'configs'))
 
