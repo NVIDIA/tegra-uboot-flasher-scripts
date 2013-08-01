@@ -55,6 +55,28 @@ to specify which you want. Valid values are default.xml (all required
 dependencies) and default-notools.xml (excludes the source to potentially
 distro-packaged utilities cbootimage, tegrarcm, dtc).
 
+Pre-requisites
+==============
+
+A number of common tools and libraries required to build tegra-uboot-flasher.
+Typically, these will be provided by standard distribution packages.
+
+For recent Debian-/Ubuntu-based distributions, the following list of packages
+will be useful:
+
+  build-essential
+  autoconf
+  automake
+  libusb-1.0-0-dev
+  libcrypto++-dev
+
+Packages with similar names likely exist for other distributions too.
+
+Note: tegrarcm depends on libusb-1.0. On at least current Debian-/Ubuntu-based
+distributions, the default/unversioned libusb package installed contains
+libusb-0.1. Make sure that libusb-1.0 is installed by using the explicit
+versioned package name specified above.
+
 Compiling Potentially Packaged Utilities
 ========================================
 

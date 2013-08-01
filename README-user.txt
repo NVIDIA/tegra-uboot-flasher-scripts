@@ -5,6 +5,27 @@ This project provides scripts and data that provide a simple way of using
 tegrarcm and U-Boot to write U-Boot (or an alternative image) to the boot
 flash of a Tegra device.
 
+The flash images handled by this tool include just the bootloader and any
+other data necessary for the bootloader to execute (i.e. the BCT). Creating or
+flashing a root filesystem, either on the Tegra device's built-in flash, or on
+external storage media, is a separate step unrelated to this tool.
+
+Pre-requisites
+==============
+
+This document assumes that the instructions in README-developer.txt have
+already been followed. Those instructions generate various files that the
+flashing process uses. These include host-based utilities such as tegrarcm,
+U-Boot binaries that run on the Tegra target device, and the flash images to
+write to the Tegra device. 
+
+If you are using a distribution package of this tool, the development steps
+have likely already been followed, and you need only follow the instructions
+in this file.
+
+If you are working with the source code to this tool, you almost certainly
+need to follow the instructions in README-developer.txt first.
+
 Board Configurations
 ====================
 
@@ -14,7 +35,7 @@ Each board may exist in a number of different configurations; perhaps the
 RAM size or speed varies, or a different type of boot flash is supported.
 Each of these configurations is also given a name. tegra-uboot-flasher's
 user-interface uses these configuration names exclusively. Examples are
-harmony, cardhu-a02-1gb.config, cardhu-a04-1gb.config.
+harmony, cardhu-a02-1gb, cardhu-a04-1gb.
 
 You may find a list of valid values for configname by executing:
 
