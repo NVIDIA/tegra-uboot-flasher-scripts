@@ -64,7 +64,8 @@ def gen_flashcmd_nand(flash_image_addr, flash_img_size):
     return flashcmd
 
 def gen_flashcmd_spi(flash_image_addr, flash_img_size):
-    flashcmd = 'sf probe 0 ; '
+    flash_id = config.get('flash-id-uboot', '0')
+    flashcmd = 'sf probe %s ; ' % flash_id
     flashcmd += 'sf erase 0 0x%08x ; ' % config['flash-erase-size']
     flashcmd += 'sf write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
     return flashcmd
