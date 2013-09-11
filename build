@@ -83,7 +83,7 @@ def run(dir, cmd):
 
 def all_enabled_confignames():
     for configname in configs.keys():
-        if configs[configname].has_key('disabled'):
+        if configs[configname].get('disabled', False):
             continue
         yield configname
 
@@ -105,23 +105,21 @@ def all_enabled_boardnames():
 def user_restrict_socs(enabled_socs):
     enabled_socs = enabled_socs.split(',')
     for socname in socs.keys():
-        if not socname in enabled_socs:
-            socs[socname]['disabled'] = True
+        socs[socname]['disabled'] = not socname in enabled_socs
 
 def user_restrict_boards(enabled_boards):
     enabled_boards = enabled_boards.split(',')
     for boardname in boards.keys():
-        if not boardname in enabled_boards:
-            boards[boardname]['disabled'] = True
+        boards[boardname]['disabled'] = not boardname in enabled_boards
 
 def restrict_boards():
     for board in boards.values():
-        if socs[board['soc']].has_key('disabled'):
+        if socs[board['soc']].get('disabled', False):
             board['disabled'] = True
 
 def restrict_configs():
     for config in configs.values():
-        if boards[config['board']].has_key('disabled'):
+        if boards[config['board']].get('disabled', False):
             config['disabled'] = True
 
 def dtb_filename(config):
