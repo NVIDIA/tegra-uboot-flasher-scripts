@@ -46,14 +46,21 @@ To obtain the source of the tegra-uboot-flasher project, do:
 
 mkdir tegra-uboot-flasher
 cd tegra-uboot-flasher
-repo init -u git://github.com/NVIDIA/tegra-uboot-flasher-manifests.git \
-        -m MANIFEST # see explanation below
+repo init -u git://github.com/NVIDIA/tegra-uboot-flasher-manifests.git
 repo sync
 
-There are two separate repo manifests for this project. Use repo's -m option
-to specify which you want. Valid values are default.xml (all required
-dependencies) and default-notools.xml (excludes the source to potentially
-distro-packaged utilities cbootimage, tegrarcm, dtc).
+The manifest includes the source to potentially distro-packaged utilities
+such as cbootimage and tegrarcm, and U-Boot itself. If you already have the
+pre-requisite tools installed, you may not want to download their source.
+Similarly, if you already build U-Boot yourself, you may not want another
+copy of the U-Boot source tree. You can request that repo not download
+those source trees using the -g option to repo init. For example:
+
+# Exclude just the pre-requisite tools:
+repo init -u ... -g default,-notools
+
+# Only include the bare minimum
+repo init -u ... -g default,-notools,-bootloader
 
 Pre-requisites
 ==============
