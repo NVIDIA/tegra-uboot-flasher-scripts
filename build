@@ -127,16 +127,9 @@ def dtb_filename(config):
     boardname = configs[config]['board']
     return boards[boardname]['soc'] + '-' + boardname + extra + '.dtb'
 
-def build_uboot_one_board(boardname):
-    build_board_dir = gen_build_board_dir(boardname)
-    build_uboot_dir = gen_build_uboot_dir(build_board_dir)
-    mkdir(build_uboot_dir)
-
+def import_uboot_one_board(boardname, build_uboot_dir):
     out_board_dir = gen_out_board_dir(boardname)
     mkdir(out_board_dir)
-
-    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' ' + boardname + '_config')
-    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' -s ' + makejobs)
 
     src = os.path.join(build_uboot_dir, 'u-boot-nodtb-tegra.bin')
     dst = os.path.join(out_board_dir, 'u-boot-nodtb-tegra.bin')
@@ -149,6 +142,27 @@ def build_uboot_one_board(boardname):
     src = os.path.join(build_uboot_dir, 'u-boot-dtb-tegra.bin')
     dst = os.path.join(out_board_dir, 'u-boot-dtb-tegra.bin')
     cp(src, dst)
+
+def cmd_import_uboot():
+    boardname = None
+    for i in all_enabled_boardnames():
+        if boardname:
+            raise Exception('import-uboot only allows one enabled board')
+        boardname = i
+    import_uboot_one_board(boardname, args.builddir)
+
+def build_uboot_one_board(boardname):
+    build_board_dir = gen_build_board_dir(boardname)
+    build_uboot_dir = gen_build_uboot_dir(build_board_dir)
+    mkdir(build_uboot_dir)
+
+    out_board_dir = gen_out_board_dir(boardname)
+    mkdir(out_board_dir)
+
+    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' ' + boardname + '_config')
+    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' -s ' + makejobs)
+
+    import_uboot_one_board(boardname, build_uboot_dir)
 
 def cmd_build_uboots():
     for boardname in all_enabled_boardnames():
@@ -221,6 +235,12 @@ parser.add_argument('--boards', type=str,
     help='Restrict the build to a (comma-separated) list of boards.')
 
 subparsers = parser.add_subparsers()
+
+subparser = subparsers.add_parser('import-uboot',
+    help='Import U-Boot binaries from an external build tree')
+subparser.add_argument('builddir', type=str,
+    help='The external build directory to import from.')
+subparser.set_defaults(func = cmd_import_uboot)
 
 subparser = subparsers.add_parser('build-uboots',
     help='Build U-Boot binaries')
