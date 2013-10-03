@@ -39,7 +39,7 @@ http://code.google.com/p/git-repo/
 
 To obtain repo, do the following in a directory in your $PATH:
 
-curl https://dl-ssl.google.com/dl/googlesource/git-repo/repo > repo
+curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > repo
 chmod a+x repo
 
 To obtain the source of the tegra-uboot-flasher project, do:
