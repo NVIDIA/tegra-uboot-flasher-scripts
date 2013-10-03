@@ -222,21 +222,21 @@ parser.add_argument('--boards', type=str,
 
 subparsers = parser.add_subparsers()
 
-parser_list_configs = subparsers.add_parser('build-uboots',
+subparser = subparsers.add_parser('build-uboots',
     help='Build U-Boot binaries')
-parser_list_configs.set_defaults(func = cmd_build_uboots)
+subparser.set_defaults(func = cmd_build_uboots)
 
-parser_list_configs = subparsers.add_parser('build-bcts-imgs',
+subparser = subparsers.add_parser('build-bcts-imgs',
     help='Build BCT and flash images')
-parser_list_configs.set_defaults(func = cmd_build_bcts_imgs)
+subparser.set_defaults(func = cmd_build_bcts_imgs)
 
-parser_list_configs = subparsers.add_parser('build-configs',
+subparser = subparsers.add_parser('build-configs',
     help='Build config files')
-parser_list_configs.set_defaults(func = cmd_build_configs)
+subparser.set_defaults(func = cmd_build_configs)
 
-parser_list_configs = subparsers.add_parser('build',
+subparser = subparsers.add_parser('build',
     help='Build everything')
-parser_list_configs.set_defaults(func = cmd_build)
+subparser.set_defaults(func = cmd_build)
 
 if __name__ == '__main__':
     args = parser.parse_args()
