@@ -194,6 +194,9 @@ def func_flash():
         # Perhaps U-Boot should set $boardname based on the ID EEPROM; then we wouldn't need this
         if config['dtbfn-extra'] != '':
             bootcmd += 'setenv board ' + boardname + config['dtbfn-extra'] + ' ; '
+        if args.env:
+            for (var, value) in args.env:
+                bootcmd += 'setenv %s %s ; ' % (var, value)
         bootcmd += 'saveenv ; '
         # To update the bootloader, reset.
         # If wanting to run installer, set installer_args.configname in environment, 'run bootcmd'
@@ -282,6 +285,10 @@ parser_flash.add_argument('--flash-image', type=str,
     help='The flash image to write, instead of U-Boot itself')
 parser_flash.add_argument('--gen-only', action='store_true',
     help='Just create the work-dir; don\'t actually flash the image')
+parser_flash.add_argument('--env', type=str, nargs=2, action='append',
+    metavar=("VAR", "VALUE"),
+    help='Set a U-Boot environment variable after flashing. This option ' +
+        'may be given multiple times')
 
 parser_exec = subparsers.add_parser('exec',
     help='Download and execute an unmodified bootloader binary, named ' +
