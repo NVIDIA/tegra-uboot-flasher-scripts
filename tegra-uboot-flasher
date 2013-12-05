@@ -55,22 +55,32 @@ def run(dir, cmd):
 def gen_flashcmd_mmc(flash_image_addr, readback_addr, flash_img_size):
     flash_id = config['flash-id-uboot']
     flash_img_size_sectors = flash_img_size / 512
-    flashcmd = 'mmc dev %d 1 ; ' % flash_id
+    flashcmd = 'echo >>> Selecting MMC device... ; '
+    flashcmd += 'mmc dev %d 1 ; ' % flash_id
+    flashcmd += 'echo >>> Writing image to MMC... ; '
     flashcmd += 'mmc write 0x%08x 0 0x%x ; ' % (flash_image_addr, flash_img_size_sectors)
+    flashcmd += 'echo >>> Reading image back from MMC... ; '
     flashcmd += 'mmc read 0x%08x 0 0x%x ; ' % (readback_addr, flash_img_size_sectors)
     return flashcmd
 
 def gen_flashcmd_nand(flash_image_addr, readback_addr, flash_img_size):
-    flashcmd = 'nand erase.chip ; '
+    flashcmd = 'echo >>> Erasing NAND... ; '
+    flashcmd += 'nand erase.chip ; '
+    flashcmd += 'echo >>> Writing image to NAND... ; '
     flashcmd += 'nand write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
+    flashcmd += 'echo >>> Reading image back from NAND... ; '
     flashcmd += 'nand read 0x%08x 0 0x%08x ; ' % (readback_addr, flash_img_size)
     return flashcmd
 
 def gen_flashcmd_spi(flash_image_addr, readback_addr, flash_img_size):
     flash_id = config.get('flash-id-uboot', '0')
-    flashcmd = 'sf probe %s ; ' % flash_id
+    flashcmd = 'echo >>> Selecting SPI device... ; '
+    flashcmd += 'sf probe %s ; ' % flash_id
+    flashcmd += 'echo >>> Erasing SPI... ; '
     flashcmd += 'sf erase 0 0x%08x ; ' % config['flash-erase-size']
+    flashcmd += 'echo >>> Writing image back to SPI... ; '
     flashcmd += 'sf write 0x%08x 0 0x%08x ; ' % (flash_image_addr, flash_img_size)
+    flashcmd += 'echo >>> Reading image back from SPI... ; '
     flashcmd += 'sf read 0x%08x 0 0x%08x ; ' % (readback_addr, flash_img_size)
     return flashcmd
 
@@ -185,11 +195,14 @@ def func_flash():
         run(workdir, cmd)
 
         bootcmd = ''
+        bootcmd += 'echo >>> Verifying image in RAM... ; '
         bootcmd += 'crc32 0x%08x 0x%08x 0x%08x ; ' % (flash_image_addr, flash_img_size, soc['ram-base'])
         bootcmd += 'if itest.l *0x%08x != 0x%x; then echo CRC MISMATCH of initial image; exit; fi ; ' % (soc['ram-base'], flash_img_crc32_bs)
         bootcmd += gen_flashcmd(flash_image_addr, readback_addr, flash_img_size)
+        bootcmd += 'echo >>> Verifying image from flash... ; '
         bootcmd += 'crc32 0x%08x 0x%08x 0x%08x ; ' % (readback_addr, flash_img_size, soc['ram-base'])
         bootcmd += 'if itest.l *0x%08x != 0x%x; then echo CRC MISMATCH of readback image; exit; fi ; ' % (soc['ram-base'], flash_img_crc32_bs)
+        bootcmd += 'echo >>> Setting up environment... ; '
         bootcmd += 'env default -f -a ; '
         # Perhaps U-Boot should set $boardname based on the ID EEPROM; then we wouldn't need this
         if config['dtbfn-extra'] != '':
@@ -198,6 +211,7 @@ def func_flash():
             for (var, value) in args.env:
                 bootcmd += 'setenv %s %s ; ' % (var, value)
         bootcmd += 'saveenv ; '
+        bootcmd += 'echo >>> Flashing OK, rebooting... ; '
         # To update the bootloader, reset.
         # If wanting to run installer, set installer_args.configname in environment, 'run bootcmd'
         bootcmd += 'reset'
