@@ -74,6 +74,7 @@ will be useful:
   build-essential
   autoconf
   automake
+  libtool
   libusb-1.0-0-dev
   libcrypto++-dev
 
