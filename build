@@ -136,6 +136,8 @@ def import_uboot_one_board(boardname, build_uboot_dir):
     cp(src, dst)
 
     src = os.path.join(build_uboot_dir, 'u-boot.dtb')
+    if not os.path.exists(src):
+        src = os.path.join(build_uboot_dir, 'dts/dt.dtb')
     dst = os.path.join(out_board_dir, 'u-boot.dtb')
     cp(src, dst)
 
