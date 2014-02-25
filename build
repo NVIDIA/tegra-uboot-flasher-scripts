@@ -159,8 +159,8 @@ def build_uboot_one_board(boardname):
     out_board_dir = gen_out_board_dir(boardname)
     mkdir(out_board_dir)
 
-    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' ' + boardname + '_config')
-    run(uboot_dir, 'make BUILD_DIR=' + build_uboot_dir + ' -s ' + makejobs)
+    run(uboot_dir, 'make O=' + build_uboot_dir + ' ' + boardname + '_config')
+    run(uboot_dir, 'make O=' + build_uboot_dir + ' -s ' + makejobs)
 
     import_uboot_one_board(boardname, build_uboot_dir)
 
