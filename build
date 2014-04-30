@@ -108,9 +108,17 @@ def user_restrict_socs(enabled_socs):
         socs[socname]['disabled'] = not socname in enabled_socs
 
 def user_restrict_boards(enabled_boards):
+    if enabled_boards[0] == '+':
+        disable_others = False
+        enabled_boards = enabled_boards[1:]
+    else:
+        disable_others = True
     enabled_boards = enabled_boards.split(',')
     for boardname in boards.keys():
-        boards[boardname]['disabled'] = not boardname in enabled_boards
+        if boardname in enabled_boards:
+            boards[boardname]['disabled'] = False
+        elif disable_others:
+            boards[boardname]['disabled'] = True
 
 def restrict_boards():
     for board in boards.values():
