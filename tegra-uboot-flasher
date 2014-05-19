@@ -156,9 +156,18 @@ def func_flash():
     if args.debug:
         print 'u_boot_plus_dtb_size %d 0x%x' % (u_boot_plus_dtb_size, u_boot_plus_dtb_size)
 
-    # Add 1024k to avoid U-Boot's BSS, and in case the DT size changes due to fdtput
+    bss_size_fn = os.path.join(out_board_dir, 'u-boot-bss-size')
+    bss_size_f = open(bss_size_fn, 'rt')
+    bss_size_s = bss_size_f.read()
+    bss_size_f.close()
+    bss_size = int(bss_size_s)
+    if args.debug:
+        print 'bss_size %d 0x%x' % (bss_size, bss_size)
+
+    # Avoid U-Boot's BSS, so the BSS-zeroing doesn't trash the DTB
+    # Add 4KB in case the DTB size changes due to fdtput
     # Align to 4k, so flash writes don't need a bounce buffer for DMA
-    padded_size = (u_boot_plus_dtb_size + (1024 * 1024) + (4 * 1024) - 1) & ~((4 * 1024) - 1)
+    padded_size = (u_boot_plus_dtb_size + bss_size + (2 * 4 * 1024) - 1) & ~((4 * 1024) - 1)
     if args.debug:
         print 'padded_size %d 0x%x' % (padded_size, padded_size)
 

@@ -24,6 +24,7 @@ import argparse
 import multiprocessing
 import os
 import shutil
+import subprocess
 import sys
 from tegraboardconfigs import *
 
@@ -138,6 +139,22 @@ def dtb_filename(config):
 def import_uboot_one_board(boardname, build_uboot_dir):
     out_board_dir = gen_out_board_dir(boardname)
     mkdir(out_board_dir)
+
+    uboot = os.path.join(build_uboot_dir, 'u-boot')
+    cmd = [os.environ['CROSS_COMPILE'] + 'size', '-A', uboot]
+    lines = subprocess.check_output(cmd)
+    bss_size = None
+    for line in lines.split('\n'):
+        fields = line.split()
+        if fields[0] == '.bss':
+            bss_size = fields[1]
+            break
+    if not bss_size:
+        raise Exception('Could not find bss size in `size`')
+    dst = os.path.join(out_board_dir, 'u-boot-bss-size')
+    f = open(dst, 'wt')
+    f.write(bss_size)
+    f.close()
 
     src = os.path.join(build_uboot_dir, 'u-boot-nodtb-tegra.bin')
     dst = os.path.join(out_board_dir, 'u-boot-nodtb-tegra.bin')
