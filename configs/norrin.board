@@ -1,0 +1,5 @@
+board = {
+    'vendor': 'nvidia',
+    'soc': 'tegra124',
+    'disabled': True,
+}
