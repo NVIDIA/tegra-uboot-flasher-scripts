@@ -213,7 +213,7 @@ def func_flash():
             bootcmd += 'setenv board ' + boardname + config['dtbfn-extra'] + ' ; '
         if args.env:
             for (var, value) in args.env:
-                bootcmd += 'setenv %s %s ; ' % (var, value)
+                bootcmd += 'setenv %s \'%s\' ; ' % (var, value)
         bootcmd += 'saveenv ; '
         bootcmd += 'echo >>> Flashing OK, rebooting... ; '
         # To update the bootloader, reset.
