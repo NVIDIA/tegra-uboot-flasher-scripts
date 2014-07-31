@@ -186,7 +186,17 @@ def build_uboot_one_board(boardname):
     out_board_dir = gen_out_board_dir(boardname)
     mkdir(out_board_dir)
 
-    run(uboot_dir, 'make O=' + build_uboot_dir + ' ' + boardname + '_config')
+    # U-Boot commit 51148790f26e "kconfig: switch to Kconfig" changed the
+    # build commands from "make ${board}_config; make" to
+    # "make ${board}_defconfig; make". That commit also introduced some new
+    # text into the "make help" output. Check for that text here in order to
+    # tell how to compile U-Boot:-/
+    ret = subprocess.call('make help 2>/dev/null | grep -q "Configuration targets"', shell=True, cwd=uboot_dir)
+    if ret:
+        config_target_suffix = '_config'
+    else:
+        config_target_suffix = '_defconfig'
+    run(uboot_dir, 'make O=' + build_uboot_dir + ' ' + boardname + config_target_suffix)
     run(uboot_dir, 'make O=' + build_uboot_dir + ' -s ' + makejobs)
 
     import_uboot_one_board(boardname, build_uboot_dir)
