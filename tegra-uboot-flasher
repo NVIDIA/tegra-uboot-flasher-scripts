@@ -195,7 +195,7 @@ def func_flash():
         cp(u_boot_dtb, u_boot_dtb_runflash)
 
         # 0xfffffffe==-2; never delay or interrupt
-        cmd = ['fdtput', '-p', '-t', 'i', u_boot_dtb_runflash, '/config', 'bootdelay', '0xfffffffe']
+        cmd = ['fdtput', '-p', '-t', 'x', u_boot_dtb_runflash, '/config', 'bootdelay', '0xfffffffe']
         run(workdir, cmd)
 
         bootcmd = ''
