@@ -218,7 +218,10 @@ def func_flash():
         bootcmd += 'echo >>> Flashing OK, rebooting... ; '
         # To update the bootloader, reset.
         # If wanting to run installer, set installer_args.configname in environment, 'run bootcmd'
-        bootcmd += 'reset'
+        if args.post_flash_cmd:
+            bootcmd += args.post_flash_cmd
+        else:
+            bootcmd += 'reset'
         print 'bootcmd:', bootcmd
         cmd = ['fdtput', '-p', '-t', 's', u_boot_dtb_runflash, '/config', 'bootcmd', bootcmd]
         run(workdir, cmd)
@@ -307,6 +310,8 @@ parser_flash.add_argument('--env', type=str, nargs=2, action='append',
     metavar=("VAR", "VALUE"),
     help='Set a U-Boot environment variable after flashing. This option ' +
         'may be given multiple times')
+parser_flash.add_argument('--post-flash-cmd', type=str,
+    help='The U-Boot command to run after flashing, defaults to \'reset\'')
 
 parser_exec = subparsers.add_parser('exec',
     help='Download and execute an unmodified bootloader binary, named ' +
