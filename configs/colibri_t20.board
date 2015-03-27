@@ -1,0 +1,5 @@
+board = {
+    'vendor': 'toradex',
+    'soc': 'tegra20',
+    'disabled': True,
+}
