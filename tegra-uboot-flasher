@@ -93,7 +93,10 @@ def get_loadaddr():
 def gen_tegrarcm_cmd(bootloader, loadaddr):
     if type(loadaddr) != str:
         loadaddr = "0x%08x" % loadaddr
-    return ['tegrarcm', '--bct=' + bct, '--bootloader=' + bootloader , '--loadaddr=' + loadaddr]
+    cmd = ['tegrarcm', '--bct=' + bct, '--bootloader=' + bootloader , '--loadaddr=' + loadaddr]
+    if args.usb_port_path:
+        cmd.extend(['--usb-port-path', args.usb_port_path])
+    return cmd
 
 def find_config_dir():
     if not configs.has_key(args.configname):
@@ -326,6 +329,8 @@ parser_exec.add_argument('--loadaddr', type=str,
     help='Load address for the bootloader binary')
 
 for p in (parser_flash, parser_exec):
+    p.add_argument('--usb-port-path', metavar='USBPORTPATH', type=str,
+        help='The USB port path of the Tegra device')
     p.add_argument('configname', metavar='CONFIG', type=str,
         help='The configuration name of the board')
 
