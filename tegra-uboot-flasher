@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-# Copyright (c) 2013, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2013-2015 NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -87,8 +87,13 @@ gen_flashcmds = {
 }
 
 def get_loadaddr():
-    # 0x00108000 is CONFIG_SPL_TEXT_BASE in U-Boot, minus RAM base
-    return soc['ram-base'] + 0x00108000
+    spl_entry_fn = os.path.join(out_board_dir, 'u-boot-spl-entry')
+    with open(spl_entry_fn, 'rt') as spl_entry_f:
+        spl_entry_s = spl_entry_f.read().strip()
+    spl_entry = int(spl_entry_s, 0)
+    if args.debug:
+        print 'spl_entry %d 0x%x' % (spl_entry, spl_entry)
+    return spl_entry
 
 def gen_tegrarcm_cmd(bootloader, loadaddr):
     if type(loadaddr) != str:
