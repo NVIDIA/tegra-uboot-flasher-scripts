@@ -206,14 +206,15 @@ def func_flash():
         cmd = ['fdtput', '-p', '-t', 'x', u_boot_dtb_runflash, '/config', 'bootdelay', '0xfffffffe']
         run(workdir, cmd)
 
+        crc_addr = soc['ram-base'] + 4
         bootcmd = ''
         bootcmd += 'echo >>> Verifying image in RAM... ; '
-        bootcmd += 'crc32 0x%08x 0x%08x 0x%08x ; ' % (flash_image_addr, flash_img_size, soc['ram-base'])
-        bootcmd += 'if itest.l *0x%08x != 0x%x; then echo CRC MISMATCH of initial image; exit; fi ; ' % (soc['ram-base'], flash_img_crc32_bs)
+        bootcmd += 'crc32 0x%08x 0x%08x 0x%08x ; ' % (flash_image_addr, flash_img_size, crc_addr)
+        bootcmd += 'if itest.l *0x%08x != 0x%x; then echo CRC MISMATCH of initial image; exit; fi ; ' % (crc_addr, flash_img_crc32_bs)
         bootcmd += gen_flashcmd(flash_image_addr, readback_addr, flash_img_size)
         bootcmd += 'echo >>> Verifying image from flash... ; '
-        bootcmd += 'crc32 0x%08x 0x%08x 0x%08x ; ' % (readback_addr, flash_img_size, soc['ram-base'])
-        bootcmd += 'if itest.l *0x%08x != 0x%x; then echo CRC MISMATCH of readback image; exit; fi ; ' % (soc['ram-base'], flash_img_crc32_bs)
+        bootcmd += 'crc32 0x%08x 0x%08x 0x%08x ; ' % (readback_addr, flash_img_size, crc_addr)
+        bootcmd += 'if itest.l *0x%08x != 0x%x; then echo CRC MISMATCH of readback image; exit; fi ; ' % (crc_addr, flash_img_crc32_bs)
         bootcmd += 'echo >>> Setting up environment... ; '
         bootcmd += 'env default -f -a ; '
         # Perhaps U-Boot should set $boardname based on the ID EEPROM; then we wouldn't need this
