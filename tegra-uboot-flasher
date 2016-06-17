@@ -136,7 +136,7 @@ def func_flash():
         print 'u_boot_dtb_size %d 0x%x' % (u_boot_dtb_size, u_boot_dtb_size)
 
     if args.flash_image:
-        flash_img = args.flash_img
+        flash_img = args.flash_image
     else:
         flash_img = os.path.join(out_board_dir, config['flash-image'])
     flash_img_size = os.path.getsize(flash_img)
