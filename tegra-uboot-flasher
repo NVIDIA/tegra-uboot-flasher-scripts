@@ -179,7 +179,6 @@ def func_flash():
     if args.debug:
         print 'pad_size %d 0x%x' % (pad_size, pad_size)
 
-    # 0x00108000 is CONFIG_SYS_TEXT_BASE in U-Boot, minus RAM base
     loadaddr = get_loadaddr()
     flash_image_addr = loadaddr + padded_size
     if args.debug:
