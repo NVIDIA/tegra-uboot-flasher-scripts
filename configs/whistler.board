@@ -1,4 +1,0 @@
-board = {
-    'vendor': 'nvidia',
-    'soc': 'tegra20',
-}
